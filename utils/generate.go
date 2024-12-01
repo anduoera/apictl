@@ -213,7 +213,7 @@ func (v newServiceMethodAdder) Visit(node ast.Node) ast.Visitor {
 								List: []*ast.Field{
 									{
 										Names: []*ast.Ident{ast.NewIdent("errorTag")},
-										Type:  ast.NewIdent("*bool"),
+										Type:  ast.NewIdent("bool"),
 									},
 									{
 										Names: []*ast.Ident{ast.NewIdent("throw")},
