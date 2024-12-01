@@ -32,19 +32,23 @@ type Logger struct {
 	Level LogLevel
 }
 
-func (c *Context) Logger(msg string, level LogLevel) {
+func (c *Context) Logger(level LogLevel, msg ...string) {
+	message := ""
+	for _, v := range msg {
+		message = message + v
+	}
 	if level >= c.logger.Level {
 		switch level {
 		case DebugLevel:
-			pterm.Debug.Println(msg)
+			pterm.Debug.Println(message)
 		case InfoLevel:
-			pterm.Info.Println(msg)
+			pterm.Info.Println(message)
 		case WarningLevel:
-			pterm.Warning.Println(msg)
+			pterm.Warning.Println(message)
 		case ErrorLevel:
-			pterm.Error.Println(msg)
+			pterm.Error.Println(message)
 		case SuccessLevel:
-			pterm.Success.Println(msg)
+			pterm.Success.Println(message)
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"autoApi/logic"
+	"apictl/logic"
 	"github.com/spf13/cobra"
 )
 

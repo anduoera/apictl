@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"autoApi/core"
+	"apictl/core"
 	"fmt"
 )
 
@@ -15,7 +15,7 @@ var commandsMap = make(map[string]NewCommandType)
 
 func GetCommandTag(command string, ctx *core.Context, args []string) Command {
 	if _, ok := commandsMap[command]; !ok {
-		ctx.Logger(fmt.Sprintf("no such %s", command), core.ErrorLevel)
+		ctx.Logger(core.ErrorLevel, fmt.Sprintf("no such %s", command))
 	}
 	fun := commandsMap[command]
 	return fun(ctx, args)

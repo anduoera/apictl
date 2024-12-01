@@ -1,4 +1,4 @@
-module autoApi
+module apictl
 
 go 1.21
 

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"autoApi/core"
+	"apictl/core"
 	"github.com/spf13/cobra"
 	"os"
 )

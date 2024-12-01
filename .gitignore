@@ -1,2 +1,5 @@
 cobra-cli.exe
 ./edge-core-dev-1
+apictl.exe
+go.sum
+.idea
