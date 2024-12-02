@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -53,6 +54,7 @@ func getDtoSelect(path string) (err error, dtos map[string]dto.ProjectStructDtoS
 	}
 	for _, file := range files {
 		subPath := filepath.Join(fullPath, file.Name())
+		subPath = strings.ReplaceAll(subPath, "test1", "test2")
 		dtos[file.Name()] = dto.ProjectStructDtoSelect{
 			SelectName: file.Name(),
 			Path:       subPath,
@@ -69,6 +71,7 @@ func getServiceSelect(path string) (err error, services map[string]dto.ProjectSt
 	}
 	for _, file := range files {
 		subPath := filepath.Join(path, file.Name())
+		subPath = strings.ReplaceAll(subPath, "test1", "test2")
 		if fileExists(filepath.Join(subPath, "service.go")) {
 			services[file.Name()] = dto.ProjectStructServiceSelect{
 				SelectName:      file.Name(),
@@ -88,7 +91,7 @@ func getApiSelect(path string) (err error, apis map[string]dto.ProjectStructApiS
 	}
 	for _, file := range files {
 		subPath := filepath.Join(path, file.Name())
-
+		subPath = strings.ReplaceAll(subPath, "test1", "test2")
 		if fileExists(filepath.Join(subPath, "api.go")) &&
 			fileExists(filepath.Join(subPath, "v1")) &&
 			fileExists(filepath.Join(subPath, "v1/api.go")) {

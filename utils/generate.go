@@ -10,6 +10,7 @@ import (
 	"go/parser"
 	"go/token"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -47,8 +48,13 @@ func GenerateFile(in dto.GenerateFileValue, savePath, tmplPath string) (err erro
 }
 
 func GenerateDto(in dto.ProjectStructDtoSelect, info dto.GenerateFileValue, dto string) (err error) {
+	file, err := getFileToString(in.Path)
+	if err != nil {
+		return
+	}
+	print(file)
 	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, in.Path, nil, parser.ParseComments)
+	node, err := parser.ParseFile(fset, "", file, parser.ParseComments)
 	if err != nil {
 		return
 	}
@@ -76,15 +82,19 @@ func GenerateDto(in dto.ProjectStructDtoSelect, info dto.GenerateFileValue, dto 
 }
 
 func GenerateApi(path string, info dto.GenerateFileValue) (err error) {
+	file, err := getFileToString(path)
+	if err != nil {
+		return
+	}
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+	node, err := parser.ParseFile(fset, "", file, parser.ParseComments)
 	if err != nil {
 		return
 	}
 	ast.Walk(newApiMethodAdder{
-		file: file,
+		file: node,
 		info: info,
-	}, file)
+	}, node)
 
 	var buf bytes.Buffer
 	if err := format.Node(&buf, fset, file); err != nil {
@@ -160,15 +170,19 @@ func GenerateApiFunc(in dto.ProjectStructApiSelect, info dto.GenerateFileValue) 
 }
 
 func GenerateService(path string, info dto.GenerateFileValue) (err error) {
+	file, err := getFileToString(path)
+	if err != nil {
+		return
+	}
 	fset := token.NewFileSet()
-	file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+	node, err := parser.ParseFile(fset, "", file, parser.ParseComments)
 	if err != nil {
 		return
 	}
 	ast.Walk(newServiceMethodAdder{
-		file: file,
+		file: node,
 		info: info,
-	}, file)
+	}, node)
 
 	var buf bytes.Buffer
 	if err := format.Node(&buf, fset, file); err != nil {
@@ -243,4 +257,28 @@ func (v newServiceMethodAdder) Visit(node ast.Node) ast.Visitor {
 		}
 	}
 	return v
+}
+
+func getFileToString(path string) (file string, err error) {
+	print(path)
+	sourceFile, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer sourceFile.Close()
+
+	buffer := make([]byte, 1024) // 1KB 的缓冲区
+	for {
+		bytesRead, readErr := sourceFile.Read(buffer)
+		if readErr != nil && readErr != io.EOF {
+			return "", readErr
+		}
+
+		if bytesRead == 0 {
+			print(file)
+			return file, nil
+		}
+		print(string(buffer[:bytesRead]))
+		file = file + string(buffer[:bytesRead])
+	}
 }

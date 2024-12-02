@@ -6,7 +6,7 @@ import (
 	"apictl/utils"
 	"apictl/utils/generate_tmpl"
 	"github.com/pterm/pterm"
-	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -37,6 +37,7 @@ func newAddCommand(ctx *core.Context, args []string) Command {
 
 func (a *addCommand) Run() {
 	taskList := make([]func() bool, 0)
+	taskList = append(taskList, a.copyFileTask)
 	taskList = append(taskList, a.checkProjectStructTask)
 	taskList = append(taskList, a.getUserInputApiNameTask)
 	taskList = append(taskList, a.getUserSelectApiTask)
@@ -47,21 +48,33 @@ func (a *addCommand) Run() {
 	taskList = append(taskList, a.generateParamTask)
 	taskList = append(taskList, a.generateApiTask)
 	taskList = append(taskList, a.generateServiceTask)
+	taskList = append(taskList, a.copyAllFileToProjectTask)
 
 	for i := 0; i < len(taskList); i++ {
 		a.ctx.Logger(core.DebugLevel, "do task:", runtime.FuncForPC(reflect.ValueOf(taskList[i]).Pointer()).Name())
 		if taskList[i]() {
+			utils.RemoveAllCopyFile()
 			return
 		}
 	}
 }
 
+func (a *addCommand) copyFileTask() (errorTag bool) {
+	err := utils.CreateBackupDir()
+	if err != nil {
+		a.ctx.Logger(core.ErrorLevel, "copy file error:", err.Error())
+		return true
+	}
+	return false
+}
+
 func (a *addCommand) checkProjectStructTask() (errorTag bool) {
-	cwd, err := os.Getwd()
+	err, cwd := utils.GetCommandPath()
 	if err != nil {
 		a.ctx.Logger(core.ErrorLevel, "get project struct error:", err.Error())
 		return true
 	}
+	cwd = filepath.Join(cwd, "test1")
 	a.ctx.Logger(core.InfoLevel, "project struct:", cwd)
 	err, a.project = utils.CheckDirectoryStructure(cwd)
 	if err != nil {
@@ -168,12 +181,12 @@ func (a *addCommand) generateFileTask() (errorTag bool) {
 func (a *addCommand) generateParamTask() (errorTag bool) {
 	err := utils.GenerateDto(a.dto, a.generateFileInput, "Input")
 	if err != nil {
-		a.ctx.Logger(core.ErrorLevel, "generate dto param error:", err.Error())
+		a.ctx.Logger(core.ErrorLevel, "generate dto Input param error:", err.Error())
 		return true
 	}
 	err = utils.GenerateDto(a.dto, a.generateFileInput, "Output")
 	if err != nil {
-		a.ctx.Logger(core.ErrorLevel, "generate dto param error:", err.Error())
+		a.ctx.Logger(core.ErrorLevel, "generate dto Output param error:", err.Error())
 		return true
 	}
 	return false
@@ -202,6 +215,20 @@ func (a *addCommand) generateServiceTask() (errorTag bool) {
 	err := utils.GenerateService(a.service.ServiceFilePath, a.generateFileInput)
 	if err != nil {
 		a.ctx.Logger(core.ErrorLevel, "generate service interface func error:", err.Error())
+		return true
+	}
+	return false
+}
+
+func (a *addCommand) copyAllFileToProjectTask() (errorTag bool) {
+	err := utils.CopyAllFileToProject()
+	if err != nil {
+		a.ctx.Logger(core.ErrorLevel, "copy All file error:", err.Error())
+		return true
+	}
+	err = utils.RemoveAllCopyFile()
+	if err != nil {
+		a.ctx.Logger(core.ErrorLevel, "remove All file error:", err.Error())
 		return true
 	}
 	return false
